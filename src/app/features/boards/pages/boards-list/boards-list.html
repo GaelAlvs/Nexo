@@ -1,0 +1,240 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- Navbar -->
+  <nav class="bg-blue-600 px-4 sm:px-6 py-3 flex items-center justify-between shadow">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14H7v-4h5v4zm5 0h-4v-7H7V7h10v10z"
+          />
+        </svg>
+      </div>
+      <span class="text-white font-bold text-lg">Nexo</span>
+    </div>
+  </nav>
+
+  <!-- Hero / boas-vindas -->
+  <div class="bg-blue-600 px-4 sm:px-6 pb-8 pt-4">
+    <div class="max-w-6xl mx-auto">
+      <p class="text-blue-200 text-sm mb-1">Bem-vindo ao Nexo! 👋</p>
+      <h1 class="text-white font-bold text-xl sm:text-2xl mb-4">Seus projetos</h1>
+
+      <!-- Estatísticas -->
+      <div class="grid grid-cols-3 gap-2 sm:gap-4 max-w-sm">
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-white font-bold text-xl">{{ boards.length }}</p>
+          <p class="text-blue-200 text-xs mt-0.5">Quadros</p>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-white font-bold text-xl">{{ totalLists }}</p>
+          <p class="text-blue-200 text-xs mt-0.5">Listas</p>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3 text-center">
+          <p class="text-white font-bold text-xl">{{ totalCards }}</p>
+          <p class="text-blue-200 text-xs mt-0.5">Cards</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-gray-700 font-semibold text-sm uppercase tracking-wide">Seus quadros</h2>
+      <button
+        (click)="showModal = true"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition active:scale-95"
+      >
+        + Novo quadro
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 anim-stagger">
+      @for (board of boards; track board.id) {
+        <div
+          (click)="openBoard(board.id)"
+          class="{{
+            board.color
+          }} rounded-xl p-3 sm:p-4 h-24 sm:h-28 flex flex-col justify-between cursor-pointer hover:opacity-90 hover:-translate-y-1 transition-all duration-150 shadow relative group anim-fade-in"
+        >
+          <div class="flex justify-between items-start">
+            <button
+              (click)="startEditBoard($event, board)"
+              class="w-6 h-6 rounded-full bg-black/20 text-white text-xs items-center justify-center hidden group-hover:flex hover:bg-black/40 transition"
+            >
+              ✎
+            </button>
+            <button
+              (click)="deleteBoard($event, board.id)"
+              class="w-6 h-6 rounded-full bg-black/20 text-white text-xs items-center justify-center hidden group-hover:flex hover:bg-black/40 transition ml-auto"
+            >
+              ✕
+            </button>
+          </div>
+
+          @if (editingBoardId === board.id) {
+            <input
+              type="text"
+              [(ngModel)]="editingBoardTitle"
+              (blur)="saveEditBoard(board)"
+              (keydown)="onEditBoardKeydown($event, board)"
+              (click)="$event.stopPropagation()"
+              class="text-white font-semibold text-sm bg-white/20 border border-white/60 rounded px-2 py-0.5 focus:outline-none w-full"
+            />
+          } @else {
+            <span class="text-white font-semibold text-sm line-clamp-2">{{ board.title }}</span>
+          }
+        </div>
+      }
+
+      <div
+        (click)="showModal = true"
+        class="bg-gray-200 hover:bg-gray-300 hover:-translate-y-1 rounded-xl p-3 sm:p-4 h-24 sm:h-28 flex items-center justify-center cursor-pointer transition-all duration-150 anim-fade-in border-2 border-dashed border-gray-300"
+      >
+        <span class="text-gray-500 text-sm font-medium">+ Novo quadro</span>
+      </div>
+    </div>
+    <!-- Dicas -->
+    <div class="mt-8">
+      <h2 class="text-gray-700 font-semibold text-sm uppercase tracking-wide mb-4">
+        Como usar o Nexo
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-white rounded-xl p-4 shadow-sm flex gap-3 items-start">
+          <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+            <svg
+              class="w-4 h-4 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-gray-800 text-sm font-semibold">Organize em listas</p>
+            <p class="text-gray-500 text-xs mt-1">
+              Crie listas como "A fazer", "Em progresso" e "Concluído" para visualizar seu fluxo de
+              trabalho.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm flex gap-3 items-start">
+          <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+            <svg
+              class="w-4 h-4 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-gray-800 text-sm font-semibold">Arraste e solte</p>
+            <p class="text-gray-500 text-xs mt-1">
+              Mova cards entre listas arrastando para refletir o progresso das suas tarefas em tempo
+              real.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 shadow-sm flex gap-3 items-start">
+          <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+            <svg
+              class="w-4 h-4 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 8V5a2 2 0 012-2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p class="text-gray-800 text-sm font-semibold">Use etiquetas</p>
+            <p class="text-gray-500 text-xs mt-1">
+              Adicione etiquetas coloridas nos cards para categorizar tarefas por tipo, prioridade
+              ou área.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (showModal) {
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 anim-fade-in"
+    (click)="showModal = false"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6 anim-scale-in"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="text-gray-800 font-semibold mb-4">Criar novo quadro</h3>
+
+      <input
+        type="text"
+        [(ngModel)]="newBoardTitle"
+        placeholder="Nome do quadro"
+        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+      />
+
+      <div class="flex gap-2 mb-4">
+        @for (color of colors; track color.value) {
+          <button
+            (click)="selectedColor = color.value"
+            class="w-7 h-7 rounded-full {{
+              color.value
+            }} border-2 transition-all duration-150 hover:scale-110"
+            [class.border-gray-800]="selectedColor === color.value"
+            [class.border-transparent]="selectedColor !== color.value"
+            [class.scale-110]="selectedColor === color.value"
+          ></button>
+        }
+      </div>
+
+      <div
+        class="{{
+          selectedColor
+        }} rounded-xl h-16 mb-4 flex items-end p-3 transition-all duration-300"
+      >
+        <span class="text-white text-sm font-semibold">
+          {{ newBoardTitle || 'Nome do quadro' }}
+        </span>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="showModal = false"
+          class="flex-1 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 active:scale-95 transition-all duration-150"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="createBoard()"
+          class="flex-1 py-2.5 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all duration-150"
+        >
+          Criar
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,241 @@
+<div class="min-h-screen flex flex-col {{ boardColor }}">
+  <!-- Navbar do board -->
+  <nav class="bg-black/20 px-4 py-2 flex items-center gap-4 shadow">
+    <a routerLink="/boards" class="text-white text-sm hover:underline shrink-0">← Quadros</a>
+    <span class="text-white font-bold text-base truncate">{{ boardTitle }}</span>
+  </nav>
+
+  <!-- Área das listas -->
+  <div class="flex-1 overflow-x-auto p-3">
+    <div
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListData]="lists"
+      (cdkDropListDropped)="dropList($event)"
+      class="flex flex-col sm:flex-row gap-3 sm:items-start anim-stagger sm:w-max pb-4"
+    >
+      @for (list of lists; track list.id) {
+        <div
+          cdkDrag
+          class="bg-gray-100 rounded-2xl w-full sm:w-64 shrink-0 flex flex-col shadow anim-slide-left"
+        >
+          <!-- Header da lista -->
+          <div
+            cdkDragHandle
+            class="px-3 pt-3 pb-1 flex items-center justify-between group cursor-grab active:cursor-grabbing"
+          >
+            @if (editingListId === list.id) {
+              <input
+                type="text"
+                [(ngModel)]="editingListTitle"
+                (blur)="saveEditList(list)"
+                (keydown)="onEditListKeydown($event, list)"
+                class="font-semibold text-gray-800 text-sm bg-white border border-blue-400 rounded px-2 py-0.5 focus:outline-none w-full"
+              />
+            } @else {
+              <h3
+                (click)="startEditList(list); $event.stopPropagation()"
+                class="font-semibold text-gray-800 text-sm cursor-text hover:bg-gray-200 px-2 py-0.5 rounded w-full truncate"
+              >
+                {{ list.title }}
+              </h3>
+            }
+            <button
+              (click)="deleteList(list.id)"
+              class="w-6 h-6 rounded text-gray-400 text-xs items-center justify-center hidden group-hover:flex hover:bg-gray-200 hover:text-gray-700 transition shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Cards -->
+          <div
+            cdkDropList
+            [cdkDropListData]="list.cards"
+            [cdkDropListConnectedTo]="listIds"
+            (cdkDropListDropped)="dropCard($event)"
+            [id]="list.id"
+            class="px-2 py-1 flex flex-col gap-2 min-h-4"
+          >
+            @for (card of list.cards; track card.id) {
+              <div
+                cdkDrag
+                (click)="openCardModal(card, list.id)"
+                class="bg-white rounded-lg px-3 py-2 shadow-sm text-sm text-gray-800 cursor-pointer hover:shadow-md transition group"
+              >
+                @if (card.labels.length > 0) {
+                  <div class="flex flex-wrap gap-1 mb-1.5">
+                    @for (label of card.labels; track label.id) {
+                      <span class="{{ label.color }} text-white text-xs px-2 py-0.5 rounded-full">
+                        {{ label.text }}
+                      </span>
+                    }
+                  </div>
+                }
+                <div class="flex items-start justify-between">
+                  <span>{{ card.title }}</span>
+                  <button
+                    (click)="$event.stopPropagation(); deleteCard(list.id, card.id)"
+                    class="w-5 h-5 rounded text-gray-300 text-xs items-center justify-center hidden group-hover:flex hover:text-gray-600 transition shrink-0 ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Adicionar card -->
+          <div class="px-2 pb-2 pt-1">
+            @if (activeAddCardListId === list.id) {
+              <div class="anim-fade-in">
+                <textarea
+                  [(ngModel)]="newCardTitle"
+                  placeholder="Título do card..."
+                  rows="2"
+                  class="w-full px-3 py-2 rounded-lg text-sm border border-blue-400 focus:outline-none resize-none mb-1"
+                ></textarea>
+                <div class="flex gap-1">
+                  <button
+                    (click)="addCard(list.id)"
+                    class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Adicionar
+                  </button>
+                  <button
+                    (click)="cancelAddCard()"
+                    class="text-gray-500 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <button
+                (click)="activeAddCardListId = list.id"
+                class="w-full text-left text-gray-500 text-xs px-2 py-1.5 rounded-lg hover:bg-gray-200 transition"
+              >
+                + Adicionar card
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Adicionar nova lista -->
+      <div class="shrink-0 w-full sm:w-64">
+        @if (showAddList) {
+          <div class="bg-gray-100 rounded-2xl p-2 shadow anim-scale-in">
+            <input
+              type="text"
+              [(ngModel)]="newListTitle"
+              placeholder="Nome da lista..."
+              class="w-full px-3 py-2 rounded-lg text-sm border border-blue-400 focus:outline-none mb-1"
+            />
+            <div class="flex gap-1">
+              <button
+                (click)="addList()"
+                class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700 transition"
+              >
+                Adicionar
+              </button>
+              <button
+                (click)="showAddList = false"
+                class="text-gray-500 text-xs px-3 py-1.5 rounded-lg hover:bg-gray-200 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        } @else {
+          <button
+            (click)="showAddList = true"
+            class="w-full text-left text-white text-sm px-3 py-2 rounded-2xl bg-white/20 hover:bg-white/30 transition"
+          >
+            + Adicionar lista
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de detalhes do card -->
+@if (showCardModal && selectedCard) {
+  <div
+    class="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-10 sm:pt-16 anim-fade-in"
+    (click)="closeCardModal()"
+  >
+    <div
+      class="bg-gray-100 rounded-2xl w-full max-w-lg shadow-xl anim-scale-in"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="bg-blue-500 rounded-t-2xl px-4 sm:px-5 py-4 flex items-start justify-between">
+        <input
+          [(ngModel)]="selectedCard.title"
+          class="bg-transparent text-white font-semibold text-base w-full focus:outline-none placeholder-white/70"
+          placeholder="Título do card"
+        />
+        <button
+          (click)="closeCardModal()"
+          class="text-white/80 hover:text-white text-lg ml-2 transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">
+            Descrição
+          </label>
+          <textarea
+            [(ngModel)]="selectedCard.description"
+            placeholder="Adicione uma descrição..."
+            rows="3"
+            class="w-full px-3 py-2 rounded-lg text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
+            Etiquetas
+          </label>
+          <div class="flex flex-wrap gap-2">
+            @for (label of availableLabels; track label.id) {
+              <button
+                (click)="toggleLabel(label)"
+                class="{{
+                  label.color
+                }} text-white text-xs px-3 py-1 rounded-full transition-all duration-150"
+                [class.opacity-40]="!hasLabel(label.id)"
+                [class.opacity-100]="hasLabel(label.id)"
+                [class.ring-2]="hasLabel(label.id)"
+                [class.ring-offset-1]="hasLabel(label.id)"
+                [class.ring-gray-400]="hasLabel(label.id)"
+                [class.scale-105]="hasLabel(label.id)"
+              >
+                {{ label.text }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            (click)="saveCard()"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-medium py-2.5 rounded-lg transition-all duration-150"
+          >
+            Salvar
+          </button>
+          <button
+            (click)="closeCardModal()"
+            class="flex-1 bg-white hover:bg-gray-200 active:scale-95 text-gray-600 text-sm font-medium py-2.5 rounded-lg transition-all duration-150"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
